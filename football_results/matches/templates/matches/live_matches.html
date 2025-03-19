@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>همه مسابقات فوتبال</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font/dist/Vazir.css" rel="stylesheet">
+    {% load static %}
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Vazir', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            direction: rtl;
+            color: #333;
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+        .date-header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .date-header .gregorian {
+            font-size: 1.5em;
+            color: #1a73e8;
+            font-weight: 700;
+        }
+        .date-header .persian {
+            font-size: 1.3em;
+            color: #34495e;
+            margin-top: 5px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #1a73e8;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 0 10px;
+        }
+        .site-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #controls {
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        #league-filter, #date-picker {
+            padding: 12px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+        }
+        #date-nav button {
+            padding: 12px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background: #1a73e8;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #date-nav button:hover {
+            background: #1557b0;
+        }
+        #theme-toggle, #settings-btn {
+            position: fixed;
+            top: 20px;
+            padding: 0;
+            background: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 30px;
+            height: 30px;
+        }
+        #theme-toggle {
+            left: 20px;
+        }
+        #settings-btn {
+            left: 80px;
+        }
+        #theme-toggle svg, #settings-btn img {
+            width: 100%;
+            height: 100%;
+            filter: invert(1);
+        }
+        #theme-toggle:hover, #settings-btn:hover {
+            background: #2c3e50;
+        }
+        .league-container {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s;
+        }
+        .league-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        .league-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #1a73e8;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .league-title img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .match {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            background: #fafafa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: background 0.2s ease;
+        }
+        .match:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .match:hover {
+            background: #f1f3f5;
+        }
+        .team {
+            flex: 2;
+            display: flex;
+            align-items: center;
+            font-size: 1.2em;
+            font-weight: 500;
+            color: #34495e;
+        }
+        .team.winner {
+            color: #27ae60;
+            font-weight: 700;
+        }
+        .team.draw {
+            color: #f39c12;
+            font-weight: 600;
+        }
+        .team img {
+            width: 30px;
+            height: 30px;
+            margin: 0 5px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .team.home {
+            justify-content: flex-end;
+        }
+        .team.away {
+            justify-content: flex-start;
+        }
+        .score {
+            flex: 1;
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #27ae60;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+        .score.updated {
+            color: #f39c12;
+        }
+        .vs {
+            flex: 0.5;
+            font-size: 1.5em;
+            color: #95a5a6;
+            text-align: center;
+        }
+        .status {
+            flex: 1;
+            font-size: 1.1em;
+            color: #27ae60;
+            text-align: center;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        .status.updated {
+            color: #f39c12;
+        }
+        .no-matches {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1.3em;
+            padding: 20px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+            transition: background 0.3s;
+        }
+        .offline-notice {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #e63946;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            display: none;
+        }
+        .dark-theme {
+            background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+            color: #ecf0f1;
+        }
+        .dark-theme .date-header {
+            background: #34495e;
+        }
+        .dark-theme .league-container,
+        .dark-theme .match,
+        .dark-theme .no-matches {
+            background: #34495e;
+            color: #ecf0f1;
+        }
+        .dark-theme .league-title {
+            color: #1a73e8;
+        }
+        .dark-theme .team {
+            color: #ecf0f1;
+        }
+        .dark-theme .team.winner {
+            color: #27ae60;
+        }
+        .dark-theme .team.draw {
+            color: #f39c12;
+        }
+        .dark-theme #league-filter,
+        .dark-theme #date-nav button,
+        .dark-theme #settings-btn {
+            background: #2c3e50;
+            color: #ecf0f1;
+        }
+        .dark-theme #settings-btn img,
+        .dark-theme #theme-toggle svg {
+            filter: invert(1);
+        }
+        #settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: right;
+        }
+        .modal-content h2 {
+            margin-bottom: 15px;
+            color: #1a73e8;
+        }
+        .modal-content label {
+            display: block;
+            margin: 10px 0;
+            font-size: 1em;
+        }
+        .modal-content select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .modal-content button {
+            margin-top: 15px;
+            padding: 10px;
+            width: 100%;
+            background: #1a73e8;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal-content button:hover {
+            background: #1557b0;
+        }
+        .dark-theme .modal-content {
+            background: #34495e;
+            color: #ecf0f1;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+            .site-logo {
+                width: 40px;
+                height: 40px;
+            }
+            .date-header .gregorian {
+                font-size: 1.2em;
+            }
+            .date-header .persian {
+                font-size: 1em;
+            }
+            .league-title {
+                font-size: 1.3em;
+            }
+            .match {
+                flex-direction: column;
+                padding: 10px;
+            }
+            .team, .score, .vs, .status {
+                flex: none;
+                width: 100%;
+                margin: 5px 0;
+            }
+            .team img {
+                width: 25px;
+                height: 25px;
+            }
+            .team.home, .team.away {
+                justify-content: center;
+            }
+            #controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            #theme-toggle {
+                top: 10px;
+                left: 10px;
+            }
+            #settings-btn {
+                top: 60px;
+                left: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-notice" id="offline-notice">شما آفلاین هستید، دیتای ذخیره‌شده نمایش داده می‌شود.</div>
+    <div class="date-header">
+        <div class="gregorian" id="gregorian-date"></div>
+        <div class="persian" id="persian-date"></div>
+    </div>
+    <button id="theme-toggle">
+        <svg id="theme-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="sun-icon" d="M12 3v1m0 16v1m9-9h-1M4 12H3m16.364-6.364l-.707-.707M5.343 18.364l-.707-.707m13.728 0l-.707.707M5.343 5.636l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path class="moon-icon" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="#fff" style="display: none;"/>
+        </svg>
+    </button>
+    <button id="settings-btn"><img src="{% static 'settings-icon.png' %}" alt="تنظیمات"></button>
+    <div class="header">
+        <img src="{% static 'logo.png' %}" alt="Site Logo" class="site-logo">
+        <h1>همه مسابقات فوتبال</h1>
+    </div>
+    <div id="controls">
+        <select id="league-filter">
+            <option value="all">همه لیگ‌ها</option>
+            {% for league_name in leagues.keys %}
+                <option value="{{ league_name }}">{{ league_name }}</option>
+            {% endfor %}
+        </select>
+        <div id="date-nav">
+            <button onclick="window.location.href='/?date={{ prev_date }}'">روز قبل</button>
+            <button onclick="window.location.href='/?date={{ next_date }}'">روز بعد</button>
+            <button id="today-btn">امروز</button>
+        </div>
+        <input type="date" id="date-picker" value="{{ current_date|slice:"0:4" }}-{{ current_date|slice:"4:6" }}-{{ current_date|slice:"6:8" }}">
+    </div>
+    {% for league_name, league_data in leagues.items %}
+        <div class="league-container" data-league="{{ league_name }}">
+            <div class="league-title">
+                {{ league_name }}
+                <img src="{{ league_data.logo }}" alt="{{ league_name }} logo">
+            </div>
+            {% for match in league_data.matches %}
+                <div class="match" data-match="{{ match.home_team }}-{{ match.away_team }}">
+                    <div class="team home {% if match.winner == 'home' %}winner{% elif match.winner == 'draw' %}draw{% endif %}">
+                        {{ match.home_team }} <img src="{{ match.home_logo }}" alt="{{ match.home_team }} logo">
+                    </div>
+                    <div class="score" data-type="home_score">{{ match.home_score }}</div>
+                    <div class="vs">🆚</div>
+                    <div class="score" data-type="away_score">{{ match.away_score }}</div>
+                    <div class="team away {% if match.winner == 'away' %}winner{% elif match.winner == 'draw' %}draw{% endif %}">
+                        <img src="{{ match.away_logo }}" alt="{{ match.away_team }} logo"> {{ match.away_team }}
+                    </div>
+                    <div class="status" data-type="status">
+                        {% if match.home_score == "" and match.away_score == "" and not match.is_postponed %}
+                            {{ match.status }}
+                        {% elif match.status == "FT" %}
+                            تمام‌شده
+                        {% elif match.status == "AET" %}
+                            پایان وقت اضافه
+                        {% elif match.status == "Pen" %}
+                            پس از پنالتی
+                        {% elif match.is_postponed %}
+                            به تعویق افتاده {% if match.postponed_time %}<s>{{ match.postponed_time }}</s>{% endif %}
+                        {% else %}
+                            وضعیت: {{ match.status }}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% empty %}
+        <div class="no-matches">هیچ مسابقه‌ای نیست.</div>
+    {% endfor %}
+
+    <div id="settings-modal">
+        <div class="modal-content">
+            <h2>تنظیمات</h2>
+            <label>
+                فرمت زمان:
+                <select id="time-format">
+                    <option value="12">12 ساعته (مثل 5:30 PM)</option>
+                    <option value="24">24 ساعته (مثل 17:30)</option>
+                </select>
+            </label>
+            <label>
+                نمایش وضعیت:
+                <select id="status-display">
+                    <option value="full">متن کامل (مثل "به تعویق افتاده")</option>
+                    <option value="short">کد کوتاه (مثل "PP")</option>
+                </select>
+            </label>
+            <label>
+                رنگ‌بندی:
+                <select id="color-theme">
+                    <option value="default">پیش‌فرض (سبز)</option>
+                    <option value="red">قرمز</option>
+                    <option value="blue">آبی</option>
+                </select>
+            </label>
+            <button id="save-settings">ذخیره</button>
+        </div>
+    </div>
+
+    <script>
+        // تبدیل میلادی به شمسی
+        function toPersianDate(gregorianDate) {
+            const gregorianYear = gregorianDate.getFullYear();
+            const gregorianMonth = gregorianDate.getMonth() + 1;
+            const gregorianDay = gregorianDate.getDate();
+
+            let persianYear = gregorianYear - 621;
+            const isLeap = (gregorianYear % 4 === 0 && gregorianYear % 100 !== 0) || (gregorianYear % 400 === 0);
+            const marchDays = isLeap ? 366 - 79 : 365 - 79; // روزهای باقی‌مونده تا نوروز
+            const dayOfYear = Math.floor((gregorianDate - new Date(gregorianYear, 0, 0)) / (1000 * 60 * 60 * 24));
+
+            let persianMonth, persianDay;
+            if (dayOfYear < marchDays) {
+                persianYear -= 1;
+                const daysSinceLastNorooz = dayOfYear + (isLeap ? 287 : 286);
+                persianMonth = Math.floor(daysSinceLastNorooz / 31) + 1;
+                persianDay = daysSinceLastNorooz % 31 || 31;
+                if (persianMonth > 6) {
+                    persianDay = daysSinceLastNorooz - 186 - (persianMonth - 7) * 30;
+                    persianMonth = Math.min(12, Math.floor((daysSinceLastNorooz - 186) / 30) + 7);
+                }
+            } else {
+                const daysSinceNorooz = dayOfYear - marchDays;
+                persianMonth = Math.floor(daysSinceNorooz / 31) + 1;
+                persianDay = daysSinceNorooz % 31 || 31;
+                if (persianMonth > 6) {
+                    persianDay = daysSinceNorooz - 186 - (persianMonth - 7) * 30;
+                    persianMonth = Math.min(12, Math.floor((daysSinceNorooz - 186) / 30) + 7);
+                }
+            }
+
+            const monthNames = [
+                "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
+                "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"
+            ];
+            return `${persianDay} ${monthNames[persianMonth - 1]} ${persianYear}`;
+        }
+
+        // نمایش تاریخ
+        function updateDateDisplay() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dateStr = urlParams.get('date') || '{{ current_date }}';
+            const year = parseInt(dateStr.slice(0, 4));
+            const month = parseInt(dateStr.slice(4, 6)) - 1;
+            const day = parseInt(dateStr.slice(6, 8));
+            const gregorianDate = new Date(year, month, day);
+
+            document.getElementById('gregorian-date').textContent = gregorianDate.toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+            document.getElementById('persian-date').textContent = toPersianDate(gregorianDate);
+        }
+
+        // آفلاین بودن
+        let cachedData = null;
+        if ('caches' in window) {
+            caches.open('live-matches-cache').then(cache => {
+                cache.match('/').then(response => {
+                    if (response) {
+                        response.text().then(text => {
+                            cachedData = text;
+                        });
+                    }
+                });
+            });
+        }
+        window.addEventListener('offline', () => {
+            document.getElementById('offline-notice').style.display = 'block';
+            if (cachedData) {
+                document.body.innerHTML = cachedData;
+            }
+        });
+        window.addEventListener('online', () => {
+            document.getElementById('offline-notice').style.display = 'none';
+            location.reload();
+        });
+
+        // اعلان زنده
+        function requestNotificationPermission() {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    console.log("اعلان‌ها فعال شد");
+                }
+            });
+        }
+        function sendNotification(message) {
+            if (Notification.permission === "granted") {
+                new Notification(message);
+            }
+        }
+        requestNotificationPermission();
+
+        function loadSettings() {
+            const timeFormat = localStorage.getItem('timeFormat') || '12';
+            const statusDisplay = localStorage.getItem('statusDisplay') || 'full';
+            const colorTheme = localStorage.getItem('colorTheme') || 'default';
+
+            document.getElementById('time-format').value = timeFormat;
+            document.getElementById('status-display').value = statusDisplay;
+            document.getElementById('color-theme').value = colorTheme;
+
+            applySettings(timeFormat, statusDisplay, colorTheme);
+        }
+
+        function applySettings(timeFormat, statusDisplay, colorTheme) {
+            document.querySelectorAll('.status').forEach(statusEl => {
+                const originalText = statusEl.getAttribute('data-original') || statusEl.innerHTML;
+                statusEl.setAttribute('data-original', originalText);
+
+                let text = originalText;
+                if (timeFormat === '24' && !text.includes('وضعیت') && !text.includes('تمام') && !text.includes('تعویق') && !text.includes('وقت اضافه') && !text.includes('پنالتی')) {
+                    const timeMatch = text.match(/(\d+):(\d+)\s*(AM|PM)/);
+                    if (timeMatch) {
+                        let [_, hours, minutes, period] = timeMatch;
+                        hours = parseInt(hours);
+                        if (period === 'PM' && hours !== 12) hours += 12;
+                        if (period === 'AM' && hours === 12) hours = 0;
+                        text = `${hours.toString().padStart(2, '0')}:${minutes}`;
+                    }
+                }
+                if (statusDisplay === 'short') {
+                    if (text.includes('تمام‌شده')) text = 'FT';
+                    else if (text.includes('پایان وقت اضافه')) text = 'AET';
+                    else if (text.includes('پس از پنالتی')) text = 'Pen';
+                    else if (text.includes('به تعویق افتاده')) {
+                        const timeMatch = text.match(/<s>.*<\/s>/);
+                        text = timeMatch ? `PP ${timeMatch[0]}` : 'PP';
+                    } else if (text.includes('وضعیت')) text = text.replace('وضعیت: ', '');
+                }
+                statusEl.innerHTML = text;
+            });
+
+            document.querySelectorAll('.score').forEach(scoreEl => {
+                scoreEl.style.color = colorTheme === 'red' ? '#e63946' : colorTheme === 'blue' ? '#1a73e8' : '#27ae60';
+            });
+            document.querySelectorAll('.status').forEach(statusEl => {
+                statusEl.style.color = colorTheme === 'red' ? '#e63946' : colorTheme === 'blue' ? '#1a73e8' : '#27ae60';
+            });
+        }
+
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            document.getElementById('settings-modal').style.display = 'flex';
+        });
+
+        document.getElementById('settings-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('settings-modal')) {
+                document.getElementById('settings-modal').style.display = 'none';
+            }
+        });
+
+        document.getElementById('save-settings').addEventListener('click', () => {
+            const timeFormat = document.getElementById('time-format').value;
+            const statusDisplay = document.getElementById('status-display').value;
+            const colorTheme = document.getElementById('color-theme').value;
+
+            localStorage.setItem('timeFormat', timeFormat);
+            localStorage.setItem('statusDisplay', statusDisplay);
+            localStorage.setItem('colorTheme', colorTheme);
+
+            applySettings(timeFormat, statusDisplay, colorTheme);
+            document.getElementById('settings-modal').style.display = 'none';
+        });
+
+        document.getElementById('today-btn').addEventListener('click', () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            window.location.href = `/?date=${year}${month}${day}`;
+        });
+
+        document.getElementById('date-picker').addEventListener('change', function() {
+            const selectedDate = this.value.replace(/-/g, '');
+            window.location.href = `/?date=${selectedDate}`;
+        });
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const sunIcon = themeIcon.querySelector('.sun-icon');
+        const moonIcon = themeIcon.querySelector('.moon-icon');
+
+        if (document.body.classList.contains('dark-theme')) {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+        } else {
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-theme');
+            if (document.body.classList.contains('dark-theme')) {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        });
+
+        function updateLiveData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const date = urlParams.get('date') || '{{ current_date }}';
+            fetch(`/live-data/?date=${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    for (const league in data) {
+                        const leagueContainer = document.querySelector(`.league-container[data-league="${league}"]`);
+                        if (!leagueContainer) continue;
+
+                        data[league].forEach(match => {
+                            const matchKey = `${match.home_team}-${match.away_team}`;
+                            const matchElement = leagueContainer.querySelector(`.match[data-match="${matchKey}"]`);
+                            if (matchElement) {
+                                const homeScoreEl = matchElement.querySelector('.score[data-type="home_score"]');
+                                const awayScoreEl = matchElement.querySelector('.score[data-type="away_score"]');
+                                const statusEl = matchElement.querySelector('.status[data-type="status"]');
+                                const homeTeamEl = matchElement.querySelector('.team.home');
+                                const awayTeamEl = matchElement.querySelector('.team.away');
+
+                                if (homeScoreEl.textContent !== match.home_score) {
+                                    homeScoreEl.textContent = match.home_score;
+                                    homeScoreEl.classList.add('updated');
+                                    setTimeout(() => homeScoreEl.classList.remove('updated'), 1000);
+                                    sendNotification(`${match.home_team} گل زد! ${match.home_score} - ${match.away_score}`);
+                                }
+                                if (awayScoreEl.textContent !== match.away_score) {
+                                    awayScoreEl.textContent = match.away_score;
+                                    awayScoreEl.classList.add('updated');
+                                    setTimeout(() => awayScoreEl.classList.remove('updated'), 1000);
+                                    sendNotification(`${match.away_team} گل زد! ${match.home_score} - ${match.away_score}`);
+                                }
+                                let statusText;
+                                if (match.home_score === "" && match.away_score === "" && !match.is_postponed) {
+                                    statusText = `${match.status}`;
+                                } else if (match.status === "FT") {
+                                    statusText = "تمام‌شده";
+                                    sendNotification(`${match.home_team} ${match.home_score} - ${match.away_score} ${match.away_team} تمام شد`);
+                                } else if (match.status === "AET") {
+                                    statusText = "پایان وقت اضافه";
+                                } else if (match.status === "Pen") {
+                                    statusText = "پس از پنالتی";
+                                } else if (match.is_postponed) {
+                                    statusText = match.postponed_time ? `به تعویق افتاده <s>${match.postponed_time}</s>` : "به تعویق افتاده";
+                                } else {
+                                    statusText = `وضعیت: ${match.status}`;
+                                }
+                                if (statusEl.innerHTML !== statusText) {
+                                    statusEl.innerHTML = statusText;
+                                    statusEl.classList.add('updated');
+                                    setTimeout(() => statusEl.classList.remove('updated'), 1000);
+                                }
+                                statusEl.setAttribute('data-original', statusText);
+
+                                homeTeamEl.classList.remove('winner', 'draw');
+                                awayTeamEl.classList.remove('winner', 'draw');
+                                if (match.winner === 'home') homeTeamEl.classList.add('winner');
+                                else if (match.winner === 'away') awayTeamEl.classList.add('winner');
+                                else if (match.winner === 'draw') {
+                                    homeTeamEl.classList.add('draw');
+                                    awayTeamEl.classList.add('draw');
+                                }
+                            }
+                        });
+                    }
+                    applySettings(
+                        localStorage.getItem('timeFormat') || '12',
+                        localStorage.getItem('statusDisplay') || 'full',
+                        localStorage.getItem('colorTheme') || 'default'
+                    );
+                    if ('caches' in window) {
+                        caches.open('live-matches-cache').then(cache => {
+                            cache.put('/', new Response(document.documentElement.outerHTML));
+                        });
+                    }
+                })
+                .catch(error => console.error('Error fetching live data:', error));
+        }
+
+        setInterval(updateLiveData, 10000);
+
+        document.getElementById("league-filter").addEventListener("change", function() {
+            const selected = this.value.trim();
+            document.querySelectorAll(".league-container").forEach(container => {
+                const title = container.querySelector(".league-title").textContent.trim();
+                container.style.display = (selected === "all" || title === selected) ? "block" : "none";
+            });
+        });
+
+        window.onload = () => {
+            loadSettings();
+            updateDateDisplay();
+        };
+    </script>
+</body>
+</html>
